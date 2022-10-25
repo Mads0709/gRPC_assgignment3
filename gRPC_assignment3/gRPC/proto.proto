@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package chittyChat;
+
+option go_package = "gRPC/proto";
+
+message FromClient {
+    string name = 1;
+    string msg = 2;
+    string timestamp = 3;
+}
+
+message FromServer {
+    string name = 1;
+    string msg = 2;
+    string timestamp = 3;
+}
+
+service Chat {
+    rpc ChatService(stream FromClient) returns (stream FromServer);
+}
+
+
