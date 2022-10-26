@@ -17,7 +17,7 @@ message MessageFromServer {
 }
 
 service Chat {
-    rpc ChatService(MessageFromClient) returns (MessageFromServer);
+    rpc ChatService(stream MessageFromClient) returns (MessageFromServer);
 }
 
 
