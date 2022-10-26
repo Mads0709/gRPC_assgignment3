@@ -26,9 +26,9 @@ func main() {
 
 	// Create a server struct
 	server := &Server{
-		name:        "serverName",
+		name:        "ChittyChat",
 		port:        *port,
-		vectorClock: "vectorClock",
+		vectorClock: "<0,0,0>",
 	}
 
 	// Start the server
@@ -63,8 +63,9 @@ func startServer(server *Server) {
 
 // the medhod inside the service Chat in proto that connects the client and the server
 func (c *Server) ChatService(ctx context.Context, in *proto.MessageFromClient) (*proto.MessageFromServer, error) {
-	log.Printf("Client with Name: %d asked for the time\n", in.Name)
+	log.Printf("User: %s , Message: %s , Timespamp: %s", in.Name, in.Msg, in.Timestamp)
 	return &proto.MessageFromServer{
-		Name: c.name,
+		Name:      c.name,
+		Timestamp: c.vectorClock,
 	}, nil
 }
