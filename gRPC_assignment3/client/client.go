@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -28,35 +29,24 @@ func main() {
 	// Parse the flags to get the port for the client
 	flag.Parse()
 	// Create a client
+	//ch := make(chan *Client)
+
 	client1 := &Client{
-		name:        "Mads",
+		name:        uuid.New().String(),
 		portNumber:  *clientPort,
 		vectorClock: "<0,0,0>",
 	}
-
-	client2 := &Client{
-		name:        "Mathias",
-		portNumber:  *clientPort,
-		vectorClock: "<0,0,0>",
-	}
-
-	/*client2 := &Client{
-		name:        "user2",
-		portNumber:  *clientPort,
-		vectorClock: "<0,0,0>",
-	}*/
 
 	// Wait for the client (user) to ask for the time
 	//log.Printf(client.name, client.portNumber, client.vectorClock)
-	go waitForTimeRequest1(client1)
-	go waitForTimeRequest2(client2)
+	go waitForMessageRequest(client1)
 
 	for {
 
 	}
 }
 
-func waitForTimeRequest1(client *Client) {
+func waitForMessageRequest(client *Client) {
 	// Connect to the server
 	serverConnection, _ := connectToServer()
 
@@ -66,32 +56,7 @@ func waitForTimeRequest1(client *Client) {
 		input := scanner.Text()
 		log.Printf("Client asked for the message with input: %s\n", input)
 
-		// Ask the server for the time
-		messageReturnMessage, err := serverConnection.ChatService(context.Background(), &proto.MessageFromClient{
-			Name:      client.name,
-			Msg:       "hej",
-			Timestamp: client.vectorClock,
-		})
-
-		if err != nil {
-			log.Printf(err.Error())
-		} else {
-			log.Printf("Server %s says the time is %s\n", messageReturnMessage.Name, messageReturnMessage.Timestamp)
-		}
-	}
-}
-
-func waitForTimeRequest2(client *Client) {
-	// Connect to the server
-	serverConnection, _ := connectToServer()
-
-	// Wait for input in the client terminal
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		input := scanner.Text()
-		log.Printf("Client asked for the message with input: %s\n", input)
-
-		// Ask the server for the time
+		// Ask the server for the message
 		messageReturnMessage, err := serverConnection.ChatService(context.Background(), &proto.MessageFromClient{
 			Name:      client.name,
 			Msg:       "hej",
