@@ -19,8 +19,9 @@ type Server struct {
 }
 
 type Clients struct {
-	clientId   int
-	clientPort int
+	clientId    int
+	clientPort  int
+	vectorClock int
 }
 
 type ClientList struct {
@@ -69,14 +70,14 @@ func startServer(server *Server) {
 
 func (c *Server) RegisterToServer(rq *proto.Request, rc proto.RegisterClient_RegisterToServerServer) error {
 	log.Printf("Client ID %d Client port %d ", rq.Id, rq.Port)
-	cl := Clients{int(rq.Id), int(rq.Port)}
+	cl := Clients{int(rq.Id), int(rq.Port), 0}
 	list = append(list, cl)
 	return rc.Send(&proto.ResponsMessage{Respond: "register success!"})
 }
 
 func (c *Server) PopulateChatMessage(con context.Context, msg *proto.ChatMessage) (*proto.ErrorMessage, error) {
 	var e error = nil
-	log.Printf("message: %s from: %d", msg.Message, msg.Id)
+	log.Printf("message: %s from: %d vectorclock: %d", msg.Message, msg.Id, msg.Vectorclock)
 	// sends message onto the stream
 	return &proto.ErrorMessage{Message: "error!"}, e
 }

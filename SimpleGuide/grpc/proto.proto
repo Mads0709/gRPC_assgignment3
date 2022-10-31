@@ -16,6 +16,7 @@ message responsMessage {
 message chatMessage {
   int64 id = 1;
   string message = 2;
+  int64 vectorclock = 3;
 }
 
 message errorMessage {

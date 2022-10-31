@@ -14,8 +14,9 @@ import (
 )
 
 type Client struct {
-	id         int
-	portNumber int
+	id          int
+	portNumber  int
+	vectorClock int
 }
 
 var (
@@ -33,8 +34,9 @@ func main() {
 
 	// Create a client
 	client := &Client{
-		id:         *clientId,
-		portNumber: *clientPort,
+		id:          *clientId,
+		portNumber:  *clientPort,
+		vectorClock: 0,
 	}
 
 	// Wait for the client (user) to ask for the time
@@ -45,7 +47,7 @@ func main() {
 }
 
 func listenOnServer(server *grpc.Server) {
-	
+
 }
 
 func registerToServer(client *Client) {
@@ -73,10 +75,12 @@ func registerToServer(client *Client) {
 	}
 	for scanner.Scan() {
 		input := scanner.Text()
+		client.vectorClock += 1
 		log.Printf("my message: %s", input)
 		serverConnection.PopulateChatMessage(context.Background(), &proto.ChatMessage{
 			Message: input,
 			Id:      int64(client.id),
+			Vectorclock:  int64(client.vectorClock),
 		})
 	}
 
