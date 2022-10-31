@@ -18,7 +18,7 @@ type Server struct {
 	vectorClock                   string
 }
 
-var port = flag.Int("port", 0, "server port number")
+var port = flag.Int("port", 8101, "server port number")
 
 func main() {
 	// Get the port from the command line when the server is run
