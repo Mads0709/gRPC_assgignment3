@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type RegisterClientClient interface {
 	RegisterToServer(ctx context.Context, in *Request, opts ...grpc.CallOption) (RegisterClient_RegisterToServerClient, error)
 	PopulateChatMessage(ctx context.Context, in *ChatMessage, opts ...grpc.CallOption) (*ErrorMessage, error)
+	LogOffServer(ctx context.Context, in *LogOffMessage, opts ...grpc.CallOption) (*ErrorMessage, error)
 }
 
 type registerClientClient struct {
@@ -75,12 +76,22 @@ func (c *registerClientClient) PopulateChatMessage(ctx context.Context, in *Chat
 	return out, nil
 }
 
+func (c *registerClientClient) LogOffServer(ctx context.Context, in *LogOffMessage, opts ...grpc.CallOption) (*ErrorMessage, error) {
+	out := new(ErrorMessage)
+	err := c.cc.Invoke(ctx, "/simpleguide.registerClient/logOffServer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RegisterClientServer is the server API for RegisterClient service.
 // All implementations must embed UnimplementedRegisterClientServer
 // for forward compatibility
 type RegisterClientServer interface {
 	RegisterToServer(*Request, RegisterClient_RegisterToServerServer) error
 	PopulateChatMessage(context.Context, *ChatMessage) (*ErrorMessage, error)
+	LogOffServer(context.Context, *LogOffMessage) (*ErrorMessage, error)
 	mustEmbedUnimplementedRegisterClientServer()
 }
 
@@ -93,6 +104,9 @@ func (UnimplementedRegisterClientServer) RegisterToServer(*Request, RegisterClie
 }
 func (UnimplementedRegisterClientServer) PopulateChatMessage(context.Context, *ChatMessage) (*ErrorMessage, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PopulateChatMessage not implemented")
+}
+func (UnimplementedRegisterClientServer) LogOffServer(context.Context, *LogOffMessage) (*ErrorMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LogOffServer not implemented")
 }
 func (UnimplementedRegisterClientServer) mustEmbedUnimplementedRegisterClientServer() {}
 
@@ -146,6 +160,24 @@ func _RegisterClient_PopulateChatMessage_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RegisterClient_LogOffServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogOffMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegisterClientServer).LogOffServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/simpleguide.registerClient/logOffServer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegisterClientServer).LogOffServer(ctx, req.(*LogOffMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RegisterClient_ServiceDesc is the grpc.ServiceDesc for RegisterClient service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +188,10 @@ var RegisterClient_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "populateChatMessage",
 			Handler:    _RegisterClient_PopulateChatMessage_Handler,
+		},
+		{
+			MethodName: "logOffServer",
+			Handler:    _RegisterClient_LogOffServer_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

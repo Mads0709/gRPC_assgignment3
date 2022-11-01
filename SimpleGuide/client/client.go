@@ -43,11 +43,7 @@ func main() {
 		portNumber:  *clientPort,
 		vectorClock: 1, //note that we call it a vector clock but it is a lambport time stamp
 	}
-
-	go registerToServer(client)
-	for {
-		//This infinit forloop keeps the program running
-	}
+	registerToServer(client)
 }
 
 func registerToServer(client *Client) {
@@ -80,12 +76,18 @@ func registerToServer(client *Client) {
 		input := scanner.Text()
 		client.vectorClock += 1
 		lamportTimeStamp += 1
-		log.Printf("my message: %s <%d>", input, client.vectorClock) //
-		serverConnection.PopulateChatMessage(context.Background(), &proto.ChatMessage{
-			Message:     input,
-			Id:          int64(client.id),
-			Vectorclock: int64(client.vectorClock),
-		})
+		if input == "logoff" {
+			log.Printf("--logging off--")
+			serverConnection.LogOffServer(context.Background(), &proto.LogOffMessage{Id: int64(*clientId)})
+			return
+		} else {
+			log.Printf("my message: %s <%d>", input, client.vectorClock) //
+			serverConnection.PopulateChatMessage(context.Background(), &proto.ChatMessage{
+				Message:     input,
+				Id:          int64(client.id),
+				Vectorclock: int64(client.vectorClock),
+			})
+		}
 	}
 }
 

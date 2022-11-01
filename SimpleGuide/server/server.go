@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -24,6 +25,7 @@ type Clients struct {
 	clientPort  int
 	vectorClock int
 	stream      proto.RegisterClient_RegisterToServerServer
+	channel     chan<- bool
 }
 
 var port = flag.Int("port", 0, "server port number")
@@ -70,14 +72,15 @@ func startServer(server *Server) {
 
 func (c *Server) RegisterToServer(rq *proto.Request, rc proto.RegisterClient_RegisterToServerServer) error {
 	log.Printf("ID %d Connected to server", rq.Id)
-	cl := Clients{int64(rq.Id), int(rq.Port), 0, rc}
+	var channel = make(chan bool, 1)
+	cl := Clients{int64(rq.Id), int(rq.Port), 0, rc, channel}
 	list = append(list, cl)
 	for i := 0; i < len(list); i++ {
 		list[i].stream.Send(&proto.ResponsMessage{Respond: "", Id: rq.Id})
 	}
 
-	wg.Add(1)
-	wg.Wait()
+	<-channel
+	log.Printf("---logged off---")
 	//We wait and thereby keep the stream open
 	return nil
 }
@@ -92,4 +95,18 @@ func (c *Server) PopulateChatMessage(con context.Context, msg *proto.ChatMessage
 	log.Printf("%s from id: %d <%d>", msg.Message, msg.Id, msg.Vectorclock)
 	// sends message onto the stream
 	return &proto.ErrorMessage{Message: "error!"}, nil
+}
+
+func (c *Server) LogOffServer(con context.Context, lom *proto.LogOffMessage) (*proto.ErrorMessage, error) {
+	log.Printf("LogOff recieved from: %d", lom.Id)
+	respondMessage := fmt.Sprintf("logOff message recived from %d", lom.Id)
+
+	for i := 0; i < len(list); i++ {
+		if list[i].clientId == lom.Id {
+			list[i].channel <- true
+		} else {
+			list[i].stream.Send(&proto.ResponsMessage{Respond: respondMessage, Id: lom.Id, Vectorclock: lom.Vectorclock})
+		}
+	}
+	return &proto.ErrorMessage{Message: ""}, nil
 }

@@ -25,7 +25,13 @@ message errorMessage {
   string message = 1;
 }
 
+message logOffMessage {
+  int64 id = 1;
+  int64 vectorclock = 2;
+}
+
 service registerClient {
     rpc registerToServer(request) returns (stream responsMessage); //Server side streaming
     rpc populateChatMessage(chatMessage) returns (errorMessage);
+    rpc logOffServer(logOffMessage) returns (errorMessage);
 }
