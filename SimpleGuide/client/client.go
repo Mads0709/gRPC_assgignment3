@@ -29,8 +29,9 @@ var (
 	serverStream, err proto.RegisterClient_RegisterToServerClient
 )
 
-//go run server/server.go -port 5454
-//go run client/client.go -cPort 8080 -sPort 5454 -cId x
+//go run server/server.go -port 5400
+//go run client/client.go -cPort 8080 -sPort 5400 -cId x
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative grpc/proto.proto
 
 func main() {
 	// Parse the flags to get the port for the client
@@ -69,6 +70,7 @@ func registerToServer(client *Client) {
 			log.Printf("Error %s \n", err.Error())
 			return
 		}
+		log.SetFlags(0)
 		log.Printf("%d Connected to Server", m.Id)
 	}
 
