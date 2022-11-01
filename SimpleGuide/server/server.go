@@ -95,7 +95,7 @@ func (c *Server) RegisterToServer(rq *proto.Request, rc proto.RegisterClient_Reg
 func (c *Server) PopulateChatMessage(con context.Context, msg *proto.ChatMessage) (*proto.ErrorMessage, error) {
 	for i := 0; i < len(list); i++ {
 		if list[i].clientId != msg.Id {
-			list[i].stream.Send(&proto.ResponsMessage{Respond: msg.Message, Id: msg.Id})
+			list[i].stream.Send(&proto.ResponsMessage{Respond: msg.Message, Id: msg.Id, Vectorclock: msg.Vectorclock})
 		}
 	}
 

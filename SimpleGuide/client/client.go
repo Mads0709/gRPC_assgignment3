@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"math"
 	"os"
 	proto "simpleguide/grpc"
 	"strconv"
@@ -12,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+var lamportTimeStamp = int64(0)
 
 type Client struct {
 	id          int
@@ -37,7 +40,7 @@ func main() {
 	client := &Client{
 		id:          *clientId,
 		portNumber:  *clientPort,
-		vectorClock: 0,
+		vectorClock: 1, //note that we call it a vector clock but it is a lambport time stamp
 	}
 
 	go registerToServer(client)
@@ -69,12 +72,13 @@ func registerToServer(client *Client) {
 		log.Printf("%d Connected to Server", m.Id)
 	}
 
-	go listenOnServer(serverStream)
+	go listenOnServer(serverStream, client)
 
 	for scanner.Scan() {
 		input := scanner.Text()
 		client.vectorClock += 1
-		log.Printf("my message: %s", input) //
+		lamportTimeStamp += 1
+		log.Printf("my message: %s <%d>", input, client.vectorClock) //
 		serverConnection.PopulateChatMessage(context.Background(), &proto.ChatMessage{
 			Message:     input,
 			Id:          int64(client.id),
@@ -83,7 +87,7 @@ func registerToServer(client *Client) {
 	}
 }
 
-func listenOnServer(serverStream proto.RegisterClient_RegisterToServerClient) {
+func listenOnServer(serverStream proto.RegisterClient_RegisterToServerClient, client *Client) {
 	for {
 		resp, err := serverStream.Recv()
 
@@ -92,8 +96,11 @@ func listenOnServer(serverStream proto.RegisterClient_RegisterToServerClient) {
 		}
 		if resp.Respond == "" { //then we know that it is someone that connected to the server
 			log.Printf("%d Connected to Server", resp.Id)
+
 		} else {
-			log.Printf("Message from %d: %s ", resp.Id, resp.Respond)
+			lamportTimeStamp = int64(math.Max(float64(resp.Vectorclock), float64(lamportTimeStamp)) + 1) //lamport timestamp
+			client.vectorClock = int(lamportTimeStamp)
+			log.Printf("Message from %d: %s <%d>", resp.Id, resp.Respond, lamportTimeStamp)
 		}
 
 	}
