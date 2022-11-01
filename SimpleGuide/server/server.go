@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"flag"
 	"log"
 	"net"
-	"os"
 	"strconv"
 	"sync"
 
@@ -58,6 +56,7 @@ func startServer(server *Server) {
 	if err != nil {
 		log.Fatalf("Could not create the server %v", err)
 	}
+	log.SetFlags(0)
 	log.Printf("Started server at port: %d\n", server.port)
 
 	// Register the grpc server and serve its listener
@@ -70,7 +69,7 @@ func startServer(server *Server) {
 }
 
 func (c *Server) RegisterToServer(rq *proto.Request, rc proto.RegisterClient_RegisterToServerServer) error {
-	log.Printf("Client ID %d Client port %d ", rq.Id, rq.Port)
+	log.Printf("ID %d Connected to server", rq.Id)
 	cl := Clients{int64(rq.Id), int(rq.Port), 0, rc}
 	list = append(list, cl)
 	for i := 0; i < len(list); i++ {
@@ -78,15 +77,6 @@ func (c *Server) RegisterToServer(rq *proto.Request, rc proto.RegisterClient_Reg
 	}
 
 	wg.Add(1)
-	//---- this is to delete a user
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	input := scanner.Text()
-	if input == "exit" {
-		wg.Done()
-		wg.Done()
-	}
-	//----
 	wg.Wait()
 	//We wait and thereby keep the stream open
 	return nil
@@ -99,7 +89,7 @@ func (c *Server) PopulateChatMessage(con context.Context, msg *proto.ChatMessage
 		}
 	}
 
-	log.Printf("message: %s from id: %d vectorclock: <%d>", msg.Message, msg.Id, msg.Vectorclock)
+	log.Printf("%s from id: %d <%d>", msg.Message, msg.Id, msg.Vectorclock)
 	// sends message onto the stream
 	return &proto.ErrorMessage{Message: "error!"}, nil
 }
